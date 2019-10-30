@@ -2213,9 +2213,6 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
     setCoinsRet.clear();
     nValueRet = 0;
 
-    // Calculate the fees for things that aren't inputs
-    CAmount not_input_fees = coin_selection_params.effective_fee.GetFee(coin_selection_params.tx_noinputs_size);
-
     std::vector<OutputGroup> all_groups;
     std::vector<OutputGroup> positive_groups;
 
@@ -2243,10 +2240,10 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
         all_groups.push_back(group);
     }
 
-    if (SelectCoinsBnB(positive_groups, nTargetValue, cost_of_change, setCoinsRet, nValueRet, not_input_fees)) {
+    if (SelectCoinsBnB(positive_groups, nTargetValue, cost_of_change, setCoinsRet, nValueRet)) {
         return true;
     }
-    return KnapsackSolver(nTargetValue + not_input_fees + change_fee, all_groups, setCoinsRet, nValueRet);
+    return KnapsackSolver(nTargetValue + change_fee, all_groups, setCoinsRet, nValueRet);
 }
 
 bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params) const
@@ -2661,7 +2658,11 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                         coin_selection_params.change_spend_size = (size_t)change_spend_size;
                     }
                     coin_selection_params.effective_fee = nFeeRateNeeded;
-                    if (!SelectCoins(vAvailableCoins, nValueToSelect, setCoins, nValueIn, coin_control, coin_selection_params))
+
+                    // Calculate the fees for things that aren't inputs
+                    CAmount not_input_fees = coin_selection_params.effective_fee.GetFee(coin_selection_params.tx_noinputs_size);
+
+                    if (!SelectCoins(vAvailableCoins, nValueToSelect + not_input_fees, setCoins, nValueIn, coin_control, coin_selection_params))
                     {
                         strFailReason = _("Insufficient funds").translated;
                         return false;
