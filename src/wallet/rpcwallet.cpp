@@ -4196,6 +4196,36 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
     return result;
 }
 
+UniValue coinselectioninfo(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    RPCHelpMan{"coinselectioninfo",
+        "\nReturns coin selection stats.\n",
+                    {},
+                    RPCResult{
+                "ttt        (numeric) F\n"
+                    },
+        RPCExamples{
+            HelpExampleCli("coinselectioninfo", "")
+        + HelpExampleRpc("coinselectioninfo", "")
+        },
+    }.Check(request);
+
+    UniValue res(UniValue::VOBJ);
+
+    res.pushKV("BnB_Usage", wallet->csinfo.bnb_use);
+    res.pushKV("SRD_Usage", wallet->csinfo.srd_use);
+    res.pushKV("Knapsack_Usage", wallet->csinfo.knapsack_use);
+
+    return res;
+}
+
 UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp
 UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
 UniValue importprivkey(const JSONRPCRequest& request);
@@ -4211,6 +4241,7 @@ UniValue importmulti(const JSONRPCRequest& request);
 static const CRPCCommand commands[] =
 { //  category              name                                actor (function)                argNames
     //  --------------------- ------------------------          -----------------------         ----------
+    { "wallet", "coinselectioninfo", &coinselectioninfo, {}},
     { "rawtransactions",    "fundrawtransaction",               &fundrawtransaction,            {"hexstring","options","iswitness"} },
     { "wallet",             "abandontransaction",               &abandontransaction,            {"txid"} },
     { "wallet",             "abortrescan",                      &abortrescan,                   {} },

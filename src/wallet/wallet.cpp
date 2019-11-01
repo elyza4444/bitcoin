@@ -2208,7 +2208,7 @@ const CTxOut& CWallet::FindNonChangeParentOutput(const CTransaction& tx, int out
 }
 
 bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<OutputGroup> groups,
-                                 std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params) const
+                                 std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params)
 {
     setCoinsRet.clear();
     nValueRet = 0;
@@ -2241,6 +2241,7 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
     }
 
     if (SelectCoinsBnB(positive_groups, nTargetValue, cost_of_change, setCoinsRet, nValueRet)) {
+        csinfo.bnb_use++;
         return true;
     }
 
@@ -2263,10 +2264,12 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
     if (knapsack_ret && !srd_ret) {
         setCoinsRet = knapsack_coins;
         nValueRet = knapsack_value;
+        csinfo.knapsack_use++;
         return true;
     } else if (!knapsack_ret && srd_ret) {
         setCoinsRet = srd_coins;
         nValueRet = srd_value;
+        csinfo.srd_use++;
         return true;
     } else if (!knapsack_ret && !srd_ret) {
         setCoinsRet.clear();
@@ -2278,10 +2281,12 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
     if (knapsack_fees < srd_fees) {
         setCoinsRet = knapsack_coins;
         nValueRet = knapsack_value;
+        csinfo.knapsack_use++;
         return true;
     } else if (srd_fees < knapsack_fees) {
         setCoinsRet = srd_coins;
         nValueRet = srd_value;
+        csinfo.srd_use++;
         return true;
     }
 
@@ -2289,16 +2294,18 @@ bool CWallet::SelectCoinsMinConf(const CAmount& nTargetValue, const CoinEligibil
     if (srd_coins.size() > knapsack_coins.size()) {
         setCoinsRet = srd_coins;
         nValueRet = srd_value;
+        csinfo.srd_use++;
         return true;
     } else {
         // srd_coins.size() <= knapsack_coins.size()
         setCoinsRet = knapsack_coins;
         nValueRet = knapsack_value;
+        csinfo.knapsack_use++;
         return true;
     }
 }
 
-bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params) const
+bool CWallet::SelectCoins(const std::vector<COutput>& vAvailableCoins, const CAmount& nTargetValue, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CCoinControl& coin_control, CoinSelectionParams& coin_selection_params)
 {
     std::vector<COutput> vCoins(vAvailableCoins);
     CAmount value_to_select = nTargetValue;
