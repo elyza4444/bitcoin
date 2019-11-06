@@ -180,6 +180,8 @@ CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, const CAmount chan
 
 bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret);
 
+bool SelectCoinsSRD(std::vector<OutputGroup>& utxo_pool, const CAmount& target_value, std::set<CInputCoin>& out_set, CAmount& value_ret);
+
 // Original coin selection algorithm as a fallback
 bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);
 
