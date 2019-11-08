@@ -2643,6 +2643,11 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
                 return false;
             }
 
+            CAmount selected_eff = 0;
+            for (const CInputCoin coin : setCoins) {
+                selected_eff += coin.effective_value;
+            }
+
             const CAmount nChange = selected_value - nValue;
             if (nChange > 0)
             {
@@ -2653,9 +2658,10 @@ bool CWallet::CreateTransaction(interfaces::Chain::Lock& locked_chain, const std
 
                 // Never create dust outputs; if we would, just
                 // add the dust to the fee.
-                // When nChange is less than the cost of the change output,
-                // send it to fees (this means BnB was used)
-                if (IsDust(newTxOut, discard_rate) || nChange <= cost_of_change)
+                // When the selected_value is within the exact match range
+                // (nValue + not_input_fees + cost_of_change), don't make change.
+                WalletLogPrintf("%d %d %d %d %d\n", selected_eff, nValue, not_input_fees, cost_of_change, selected_value);
+                if (IsDust(newTxOut, discard_rate) || selected_eff <= nValue + not_input_fees + cost_of_change)
                 {
                     nChangePosInOut = -1;
                     nFeeRet = nChange;
