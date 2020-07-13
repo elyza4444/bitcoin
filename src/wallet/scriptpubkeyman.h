@@ -261,6 +261,8 @@ static const std::unordered_set<OutputType> LEGACY_OUTPUT_TYPES {
     OutputType::BECH32,
 };
 
+class DescriptorScriptPubKeyMan;
+
 class LegacyScriptPubKeyMan : public ScriptPubKeyMan, public FillableSigningProvider
 {
 private:
@@ -502,6 +504,9 @@ public:
 
     std::set<CKeyID> GetKeys() const override;
     const std::unordered_set<CScript, SaltedSipHasher> GetScriptPubKeys() const override;
+
+    /** Get the DescriptScriptPubKeyMans that have the same scriptPubKeys as this LegacyScriptPubKeyMan */
+    std::vector<std::unique_ptr<DescriptorScriptPubKeyMan>> MigrateToDescriptor(std::vector<std::string>& watch_descs, std::vector<std::string>& solvable_descs);
 };
 
 /** Wraps a LegacyScriptPubKeyMan so that it can be returned in a new unique_ptr. Does not provide privkeys */
