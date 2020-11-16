@@ -221,7 +221,7 @@ struct SelectionResult
     std::vector<CInputCoin> GetInputVector() const;
 };
 
-bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret);
+bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change, SelectionResult& result);
 
 // Original coin selection algorithm as a fallback
 bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet);

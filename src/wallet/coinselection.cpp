@@ -53,17 +53,14 @@ struct {
  *        bound of the range.
  * @param const CAmount& cost_of_change This is the cost of creating and spending a change output.
  *        This plus selection_target is the upper bound of the range.
- * @param std::set<CInputCoin>& out_set -> This is an output parameter for the set of CInputCoins
- *        that have been selected.
- * @param CAmount& value_ret -> This is an output parameter for the total value of the CInputCoins
- *        that were selected.
+ * @param[out] result The result of this coin selection algorithm
  */
 
 static const size_t TOTAL_TRIES = 100000;
 
-bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret)
+bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change, SelectionResult& result)
 {
-    out_set.clear();
+    result.Clear();
     CAmount curr_value = 0;
 
     std::vector<bool> curr_selection; // select the utxo at this index
@@ -157,11 +154,9 @@ bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selectio
     }
 
     // Set output set
-    value_ret = 0;
     for (size_t i = 0; i < best_selection.size(); ++i) {
         if (best_selection.at(i)) {
-            util::insert(out_set, utxo_pool.at(i).m_outputs);
-            value_ret += utxo_pool.at(i).m_value;
+            result.AddInput(utxo_pool.at(i));
         }
     }
 
