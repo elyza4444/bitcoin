@@ -216,6 +216,9 @@ struct SelectionResult
 
     /** Calculates the waste for this selection via GetSelectionWaste */
     CAmount GetWaste() const;
+
+    /** Get the vector of CInputCoins that will be used to fill in a CTransaction's vin */
+    std::vector<CInputCoin> GetInputVector() const;
 };
 
 bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret);
