@@ -374,11 +374,10 @@ bool CWallet::AttemptSelection(const CAmount& nTargetValue, const CoinEligibilit
     std::vector<OutputGroup> all_groups = GroupOutputs(coins, coin_selection_params, eligibility_filter, false /* positive_only */);
     // While nTargetValue includes the transaction fees for non-input things, it does not include the fee for creating a change output.
     // So we need to include that for KnapsackSolver as well, as we are expecting to create a change output.
-    std::set<CInputCoin> knapsack_coins;
-    CAmount knapsack_value;
-    bool knapsack_ret = KnapsackSolver(nTargetValue + coin_selection_params.m_change_fee, all_groups, knapsack_coins, knapsack_value);
+    SelectionResult knapsack_result;
+    bool knapsack_ret = KnapsackSolver(nTargetValue + coin_selection_params.m_change_fee, all_groups, knapsack_result);
     if (knapsack_ret) {
-        results.push_back(std::make_tuple(GetSelectionWaste(knapsack_coins, coin_selection_params.m_cost_of_change, nTargetValue + coin_selection_params.m_change_fee, coin_selection_params.m_subtract_fee_outputs), std::move(knapsack_coins), knapsack_value));
+        results.push_back(std::make_tuple(GetSelectionWaste(knapsack_result.selected_inputs, coin_selection_params.m_cost_of_change, nTargetValue + coin_selection_params.m_change_fee, coin_selection_params.m_subtract_fee_outputs), std::move(knapsack_result.selected_inputs), knapsack_result.GetSelectedValue()));
     }
 
     if (results.size() == 0) {
