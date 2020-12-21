@@ -342,6 +342,11 @@ CAmount OutputGroup::GetSelectionAmount() const
     return m_subtract_fee_outputs ? m_value : effective_value;
 }
 
+CAmount SelectionResult::GetWaste() const
+{
+    return GetSelectionWaste(selected_inputs, m_make_change ? 0 : m_change_cost, m_target, m_real_value);
+}
+
 CAmount GetSelectionWaste(const std::set<CInputCoin>& inputs, const CAmount change_cost, const CAmount target, bool real_value)
 {
     // If the result is empty, then selection failed. Don't use this one, so set waste to very high
@@ -406,6 +411,8 @@ void SelectionResult::Clear()
 {
     selected_inputs.clear();
     input_fees = 0;
+    m_make_change = false;
+    m_target = 0;
 }
 
 void SelectionResult::AddInput(const OutputGroup& group)

@@ -191,6 +191,17 @@ struct SelectionResult
      *  hit a specific target.
      */
     CAmount input_fees{0};
+    /** Whether the input values for calculations should be the real value (true) or the effective value (false) */
+    bool m_real_value{false};
+    /** The algorithm used supports making change outputs. */
+    bool m_make_change{false};
+    /** The cost of making a change output and spending it in the future. Since this is largely a static parameter independent of the selection, it is not cleared by Clear() */
+    CAmount m_change_cost{0};
+    /** The target the algorithm selected for. Note that this may not be equal to the recipient amount as it can include non-input fees */
+    CAmount m_target{0};
+
+    SelectionResult() {}
+    explicit SelectionResult(const CAmount change_cost) : m_change_cost(change_cost) {}
 
     /** Get the sum of the input values */
     CAmount GetSelectedValue() const;
@@ -202,6 +213,9 @@ struct SelectionResult
     void Clear();
 
     void AddInput(const OutputGroup& group);
+
+    /** Calculates the waste for this selection via GetSelectionWaste */
+    CAmount GetWaste() const;
 };
 
 bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change, std::set<CInputCoin>& out_set, CAmount& value_ret);
