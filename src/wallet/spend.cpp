@@ -658,10 +658,9 @@ bool CWallet::CreateTransactionInternal(
         return false;
     }
 
-    // Get long term estimate
-    CCoinControl cc_temp;
-    cc_temp.m_confirm_target = chain().estimateMaxBlocks();
-    coin_selection_params.m_long_term_feerate = GetMinimumFeeRate(*this, cc_temp, nullptr);
+    // Get the long term fee estimate. This estimate is really the fee rate at which we are still willing to consolidate inputs.
+    // By default, we use 10 sat/vbyte.
+    coin_selection_params.m_long_term_feerate = CFeeRate(10, COIN); // Use 10 sat per vbyte
 
     // Calculate the cost of change
     // Cost of change is the cost of creating the change output + cost of spending the change output in the future.
