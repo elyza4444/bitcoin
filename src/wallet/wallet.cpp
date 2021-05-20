@@ -2664,6 +2664,15 @@ std::shared_ptr<CWallet> CWallet::Create(interfaces::Chain* chain, const std::st
         walletInstance->m_default_max_tx_fee = nMaxFee;
     }
 
+    if (gArgs.IsArgSet("-consolidatefeerate")) {
+        CAmount consolidate_feerate = 0;
+        if (!ParseMoney(gArgs.GetArg("-consolidatefeerate", ""), consolidate_feerate)) {
+            error = AmountErrMsg("consolidatefeerate", gArgs.GetArg("-consolidatefeerate", ""));
+            return nullptr;
+        }
+        walletInstance->m_consolidate_feerate = CFeeRate(consolidate_feerate);
+    }
+
     if (chain && chain->relayMinFee().GetFeePerK() > HIGH_TX_FEE_PER_KB) {
         warnings.push_back(AmountHighWarn("-minrelaytxfee") + Untranslated(" ") +
                            _("The wallet will avoid paying less than the minimum relay fee."));

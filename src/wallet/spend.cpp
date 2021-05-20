@@ -658,10 +658,8 @@ bool CWallet::CreateTransactionInternal(
         return false;
     }
 
-    // Get long term estimate
-    CCoinControl cc_temp;
-    cc_temp.m_confirm_target = chain().estimateMaxBlocks();
-    coin_selection_params.m_long_term_feerate = GetMinimumFeeRate(*this, cc_temp, nullptr);
+    // Set the long term fee estimate to the wallet's consolidate feerate
+    coin_selection_params.m_long_term_feerate = m_consolidate_feerate;
 
     // Calculate the cost of change
     // Cost of change is the cost of creating the change output + cost of spending the change output in the future.
