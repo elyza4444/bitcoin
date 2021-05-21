@@ -61,6 +61,7 @@ static const size_t TOTAL_TRIES = 100000;
 bool SelectCoinsBnB(std::vector<OutputGroup>& utxo_pool, const CAmount& selection_target, const CAmount& cost_of_change, SelectionResult& result)
 {
     result.Clear();
+    result.m_target = selection_target;
     CAmount curr_value = 0;
 
     std::vector<bool> curr_selection; // select the utxo at this index
@@ -212,6 +213,7 @@ static void ApproximateBestSubset(const std::vector<OutputGroup>& groups, const 
 bool KnapsackSolver(const CAmount& nTargetValue, std::vector<OutputGroup>& groups, SelectionResult& result)
 {
     result.Clear();
+    result.m_target = nTargetValue;
 
     // List of values less than target
     std::optional<OutputGroup> lowest_larger;

@@ -357,27 +357,25 @@ bool CWallet::AttemptSelection(const CAmount& nTargetValue, const CoinEligibilit
 {
     setCoinsRet.clear();
     nValueRet = 0;
-    // Vector of results for use with waste calculation
-    // In order: calculated waste, selected inputs, selected input value (sum of input values)
-    // TODO: Use a struct representing the selection result
-    std::vector<std::tuple<CAmount, std::set<CInputCoin>, CAmount>> results;
+    // Vector of results. We will choose the best one based on waste.
+    std::vector<SelectionResult> results;
 
     // Note that unlike KnapsackSolver, we do not include the fee for creating a change output as BnB will not create a change output.
     std::vector<OutputGroup> positive_groups = GroupOutputs(coins, coin_selection_params, eligibility_filter, true /* positive_only */);
-    SelectionResult bnb_result;
+    SelectionResult bnb_result; // Because BnB does not make change, we need to make sure the cost of change is 0 for its waste calculation.
     bool bnb_ret = SelectCoinsBnB(positive_groups, nTargetValue, coin_selection_params.m_cost_of_change, bnb_result);
     if (bnb_ret) {
-        results.push_back(std::make_tuple(GetSelectionWaste(bnb_result.selected_inputs, /* cost of change */ CAmount(0), nTargetValue, coin_selection_params.m_subtract_fee_outputs), std::move(bnb_result.selected_inputs), bnb_result.GetSelectedValue()));
+        results.push_back(bnb_result);
     }
 
     // The knapsack solver has some legacy behavior where it will spend dust outputs. We retain this behavior, so don't filter for positive only here.
     std::vector<OutputGroup> all_groups = GroupOutputs(coins, coin_selection_params, eligibility_filter, false /* positive_only */);
     // While nTargetValue includes the transaction fees for non-input things, it does not include the fee for creating a change output.
     // So we need to include that for KnapsackSolver as well, as we are expecting to create a change output.
-    SelectionResult knapsack_result;
+    SelectionResult knapsack_result(coin_selection_params.m_cost_of_change);
     bool knapsack_ret = KnapsackSolver(nTargetValue + coin_selection_params.m_change_fee, all_groups, knapsack_result);
     if (knapsack_ret) {
-        results.push_back(std::make_tuple(GetSelectionWaste(knapsack_result.selected_inputs, coin_selection_params.m_cost_of_change, nTargetValue + coin_selection_params.m_change_fee, coin_selection_params.m_subtract_fee_outputs), std::move(knapsack_result.selected_inputs), knapsack_result.GetSelectedValue()));
+        results.push_back(knapsack_result);
     }
 
     if (results.size() == 0) {
@@ -388,10 +386,12 @@ bool CWallet::AttemptSelection(const CAmount& nTargetValue, const CoinEligibilit
     // Choose the result with the least waste
     // If the waste is the same, choose the one which spends more inputs.
     const auto& best_result = std::min_element(results.begin(), results.end(), [](const auto& a, const auto& b){
-        return std::get<0>(a) < std::get<0>(b) || (std::get<0>(a) == std::get<0>(b) && std::get<1>(a).size() > std::get<1>(b).size());
+        CAmount a_waste = a.GetWaste();
+        CAmount b_waste = b.GetWaste();
+        return a_waste < b_waste || (a_waste == b_waste && a.selected_inputs.size() > b.selected_inputs.size());
     });
-    setCoinsRet = std::get<1>(*best_result);
-    nValueRet = std::get<2>(*best_result);
+    setCoinsRet = best_result->selected_inputs;
+    nValueRet = best_result->GetSelectedValue();
     return true;
 }
 

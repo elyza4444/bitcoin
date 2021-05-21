@@ -171,6 +171,8 @@ struct OutputGroup
  * excess = selected_effective_value - target
  * change_cost = change_fee + change_long_term_fee
  *
+ * Note this function is separate from SelectionResult for the tests.
+ *
  * @param[in] inputs The selected inputs
  * @param[in] change_cost The cost of creating change and spending it in the future. Only used if there is change. Must be 0 if there is no change.
  * @param[in] target The amount targeted by the coin selection algorithm.
