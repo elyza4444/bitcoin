@@ -382,6 +382,15 @@ bool CWallet::AttemptSelection(const CAmount& nTargetValue, const CoinEligibilit
         results.push_back(std::make_tuple(GetSelectionWaste(knapsack_coins, coin_selection_params.m_cost_of_change, nTargetValue + coin_selection_params.m_change_fee), std::move(knapsack_coins), knapsack_value));
     }
 
+    std::set<CInputCoin> srd_coins;
+    CAmount srd_value;
+    // We include the minimum final change for SRD as we do want to avoid making really small change.
+    // KnapsackSolver does not need this because it includes MIN_CHANGE internally.
+    bool srd_ret = SelectCoinsSRD(positive_groups, nTargetValue + coin_selection_params.m_change_fee + MIN_FINAL_CHANGE, srd_coins, srd_value);
+    if (srd_ret) {
+        results.push_back(std::make_tuple(GetSelectionWaste(srd_coins, coin_selection_params.m_cost_of_change, nTargetValue + coin_selection_params.m_change_fee + MIN_FINAL_CHANGE), std::move(srd_coins), srd_value));
+    }
+
     if (results.size() == 0) {
         // No solution found
         return false;
