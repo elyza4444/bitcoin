@@ -446,7 +446,7 @@ public:
      * param@[out]  nValueRet       Used to return the total value of selected coins.
      */
     bool AttemptSelection(const CAmount& nTargetValue, const CoinEligibilityFilter& eligibility_filter, std::vector<COutput> coins,
-        std::set<CInputCoin>& setCoinsRet, CAmount& nValueRet, const CoinSelectionParams& coin_selection_params) const;
+        const CoinSelectionParams& coin_selection_params, SelectionResult& result) const;
 
     bool IsSpent(const uint256& hash, unsigned int n) const EXCLUSIVE_LOCKS_REQUIRED(cs_wallet);
 

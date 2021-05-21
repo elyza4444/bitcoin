@@ -54,12 +54,11 @@ static void CoinSelection(benchmark::Bench& bench)
                                                     /* long_term_feerate= */ CFeeRate(0), /* discard_feerate= */ CFeeRate(0),
                                                     /* tx_no_inputs_size= */ 0, /* avoid_partial= */ false);
     bench.run([&] {
-        std::set<CInputCoin> setCoinsRet;
-        CAmount nValueRet;
-        bool success = wallet.AttemptSelection(1003 * COIN, filter_standard, coins, setCoinsRet, nValueRet, coin_selection_params);
+        SelectionResult selection;
+        bool success = wallet.AttemptSelection(1003 * COIN, filter_standard, coins, coin_selection_params, selection);
         assert(success);
-        assert(nValueRet == 1003 * COIN);
-        assert(setCoinsRet.size() == 2);
+        assert(selection.GetSelectedValue() == 1003 * COIN);
+        assert(selection.selected_inputs.size() == 2);
     });
 }
 

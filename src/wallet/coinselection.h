@@ -203,7 +203,7 @@ struct SelectionResult
     CAmount m_target{0};
 
     SelectionResult() {}
-    explicit SelectionResult(const CAmount change_cost) : m_change_cost(change_cost) {}
+    explicit SelectionResult(const CAmount change_cost, bool use_real_value) : m_change_cost(change_cost), m_real_value(use_real_value) {}
 
     /** Get the sum of the input values */
     CAmount GetSelectedValue() const;
