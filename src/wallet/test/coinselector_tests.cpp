@@ -136,6 +136,14 @@ inline std::vector<OutputGroup>& GroupCoins(const std::vector<COutput>& coins)
     return static_groups;
 }
 
+inline std::vector<OutputGroup>& KnapsackGroupOutputs(const CoinEligibilityFilter& filter)
+{
+    static std::vector<OutputGroup> static_groups;
+    static_groups.clear();
+    static_groups = testWallet.GroupOutputs(vCoins, coin_selection_params, filter, false);
+    return static_groups;
+}
+
 // Branch and bound coin selection tests
 BOOST_AUTO_TEST_CASE(bnb_search_test)
 {
