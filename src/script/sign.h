@@ -64,6 +64,7 @@ typedef std::pair<CPubKey, std::vector<unsigned char>> SigPair;
 struct SignatureData {
     bool complete = false; ///< Stores whether the scriptSig and scriptWitness are complete
     bool witness = false; ///< Stores whether the input this SigData corresponds to is a witness input
+    TxoutType spk_type = TxoutType::NONSTANDARD; ///< Stores the type of scriptPubKey the input spends
     CScript scriptSig; ///< The scriptSig of an input. Contains complete signatures or the traditional partial signatures format
     CScript redeem_script; ///< The redeemScript (if any) for the input
     CScript witness_script; ///< The witnessScript (if any) for the input. witnessScripts are used in P2WSH outputs.

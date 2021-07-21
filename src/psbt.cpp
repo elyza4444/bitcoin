@@ -360,7 +360,12 @@ bool SignPSBTInput(const SigningProvider& provider, PartiallySignedTransaction& 
     // TODO: For segwit v1, we should remove the non_witness_utxo
     if (sigdata.witness) {
         input.witness_utxo = utxo;
-        // input.non_witness_utxo = nullptr;
+        // For Segwit v0 (native and p2sh wrapped), the non witness utxo must be provided
+        // For all other segwit versions, it can be removed.
+        // It should not be possible for sigdata.spk_type to be NONSTANDARD, PUBKEY, PUBKEYHASH, MULTISIG, or NULL_DATA so we do not check those.
+        if (sigdata.spk_type != TxoutType::SCRIPTHASH && sigdata.spk_type != TxoutType::WITNESS_V0_SCRIPTHASH && sigdata.spk_type != TxoutType::WITNESS_V0_KEYHASH) {
+            input.non_witness_utxo = nullptr;
+        }
     }
 
     // Fill in the missing info
