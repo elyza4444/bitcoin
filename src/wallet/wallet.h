@@ -581,7 +581,7 @@ public:
      */
     TransactionError FillPSBT(PartiallySignedTransaction& psbtx,
                   bool& complete,
-                  int sighash_type = 1 /* SIGHASH_ALL */,
+                  int sighash_type = 0 /* SIGHASH_DEFAULT */,
                   bool sign = true,
                   bool bip32derivs = true,
                   size_t* n_signed = nullptr) const;
