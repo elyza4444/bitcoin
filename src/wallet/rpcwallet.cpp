@@ -4317,6 +4317,7 @@ static RPCHelpMan walletprocesspsbt()
                 "       \"NONE|ANYONECANPAY\"\n"
                 "       \"SINGLE|ANYONECANPAY\""},
                         {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
+                        {"finalize", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also finalize inputs if possible"},
                     }, "options"},
                     {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT"}, "for backwards compatibility", "", {}, /* hidden */ true},
                     {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "for backwards compatibility", "", {}, /* hidden */ true},
@@ -4341,7 +4342,7 @@ static RPCHelpMan walletprocesspsbt()
     // the user could have gotten from another RPC command prior to now
     wallet.BlockUntilSyncedToCurrentChain();
 
-    RPCTypeCheck(request.params, {UniValue::VSTR, UniValue::VBOOL, UniValue::VSTR});
+    RPCTypeCheck(request.params, {UniValue::VSTR});
 
     // Unserialize the transaction
     PartiallySignedTransaction psbtx;
@@ -4353,6 +4354,7 @@ static RPCHelpMan walletprocesspsbt()
     // Get options
     bool sign = true;
     bool bip32derivs = true;
+    bool finalize = true;
     int sighash_type = ParseSighashString(NullUniValue); // Use ParseSighashString default
     if (!request.params[1].isNull()) {
         if (request.params[1].isBool()) {
@@ -4368,6 +4370,7 @@ static RPCHelpMan walletprocesspsbt()
                 {
                     {"sign", UniValueType(UniValue::VBOOL)},
                     {"bip32derivs", UniValueType(UniValue::VBOOL)},
+                    {"finalize", UniValueType(UniValue::VBOOL)},
                     {"sighashtype", UniValueType(UniValue::VSTR)},
                 },
                 true, true);
@@ -4377,6 +4380,9 @@ static RPCHelpMan walletprocesspsbt()
             if (options.exists("bip32derivs")) {
                 bip32derivs = options["bip32derivs"].get_bool();
             }
+            if (options.exists("finalize")) {
+                finalize = options["finalize"].get_bool();
+            }
             if (options.exists("sighashtype")) {
                 sighash_type = ParseSighashString(options["sighashtype"]);
             }
@@ -4385,7 +4391,7 @@ static RPCHelpMan walletprocesspsbt()
 
     // Fill transaction with our data and also sign
     bool complete = true;
-    const TransactionError err{wallet.FillPSBT(psbtx, complete, sighash_type, sign, bip32derivs)};
+    const TransactionError err{wallet.FillPSBT(psbtx, complete, sighash_type, sign, bip32derivs, nullptr, finalize)};
     if (err != TransactionError::OK) {
         throw JSONRPCTransactionError(err);
     }
