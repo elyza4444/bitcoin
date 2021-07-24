@@ -135,7 +135,7 @@ class WalletSignerTest(BitcoinTestFramework):
         assert_equal(mock_wallet.getwalletinfo()["txcount"], 1)
         dest = self.nodes[0].getnewaddress(address_type='bech32')
         mock_psbt = mock_wallet.walletcreatefundedpsbt([], {dest:0.5}, 0, {}, True)['psbt']
-        mock_psbt_signed = mock_wallet.walletprocesspsbt(psbt=mock_psbt, sign=True, sighashtype="ALL", bip32derivs=True)
+        mock_psbt_signed = mock_wallet.walletprocesspsbt(psbt=mock_psbt, options={"sign": True, "sighashtype": "ALL", "bip32derivs": True})
         mock_psbt_final = mock_wallet.finalizepsbt(mock_psbt_signed["psbt"])
         mock_tx = mock_psbt_final["hex"]
         assert(mock_wallet.testmempoolaccept([mock_tx])[0]["allowed"])

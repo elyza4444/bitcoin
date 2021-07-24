@@ -161,7 +161,7 @@ class AddressTypeTest(BitcoinTestFramework):
         # the PSBT logic. However, this does test consistency between the PSBT reported
         # fingerprints/paths and the descriptor logic.
         psbt = self.nodes[node].createpsbt([{'txid':utxo['txid'], 'vout':utxo['vout']}],[{address:0.00010000}])
-        psbt = self.nodes[node].walletprocesspsbt(psbt, False, "ALL", True)
+        psbt = self.nodes[node].walletprocesspsbt(psbt, {"sign": False, "sighashtype": "ALL", "bip32derivs": True})
         decode = self.nodes[node].decodepsbt(psbt['psbt'])
         key_descs = {}
         for deriv in decode['inputs'][0]['bip32_derivs']:

@@ -4305,16 +4305,21 @@ static RPCHelpMan walletprocesspsbt()
         HELP_REQUIRING_PASSPHRASE,
                 {
                     {"psbt", RPCArg::Type::STR, RPCArg::Optional::NO, "The transaction base64 string"},
-                    {"sign", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also sign the transaction when updating"},
-                    {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT"}, "The signature hash type to sign with if not specified by the PSBT. Must be one of\n"
-            "       \"DEFAULT\"\n"
-            "       \"ALL\"\n"
-            "       \"NONE\"\n"
-            "       \"SINGLE\"\n"
-            "       \"ALL|ANYONECANPAY\"\n"
-            "       \"NONE|ANYONECANPAY\"\n"
-            "       \"SINGLE|ANYONECANPAY\""},
-                    {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
+                    {"options|sign", RPCArg::Type::OBJ, RPCArg::Optional::OMITTED_NAMED_ARG, "",
+                    {
+                        {"sign", RPCArg::Type::BOOL, RPCArg::Default{true}, "Also sign the transaction when updating"},
+                        {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT"}, "The signature hash type to sign with if not specified by the PSBT. Must be one of\n"
+                "       \"DEFAULT\"\n"
+                "       \"ALL\"\n"
+                "       \"NONE\"\n"
+                "       \"SINGLE\"\n"
+                "       \"ALL|ANYONECANPAY\"\n"
+                "       \"NONE|ANYONECANPAY\"\n"
+                "       \"SINGLE|ANYONECANPAY\""},
+                        {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "Include BIP 32 derivation paths for public keys if we know them"},
+                    }, "options"},
+                    {"sighashtype", RPCArg::Type::STR, RPCArg::Default{"DEFAULT"}, "for backwards compatibility", "", {}, /* hidden */ true},
+                    {"bip32derivs", RPCArg::Type::BOOL, RPCArg::Default{true}, "for backwards compatibility", "", {}, /* hidden */ true},
                 },
                 RPCResult{
                     RPCResult::Type::OBJ, "", "",
@@ -4345,14 +4350,42 @@ static RPCHelpMan walletprocesspsbt()
         throw JSONRPCError(RPC_DESERIALIZATION_ERROR, strprintf("TX decode failed %s", error));
     }
 
-    // Get the sighash type
-    int nHashType = ParseSighashString(request.params[2]);
+    // Get options
+    bool sign = true;
+    bool bip32derivs = true;
+    int sighash_type = ParseSighashString(NullUniValue); // Use ParseSighashString default
+    if (!request.params[1].isNull()) {
+        if (request.params[1].isBool()) {
+            // Old style command line options
+            sign = request.params[1].isNull() ? true : request.params[1].get_bool();
+            sighash_type = ParseSighashString(request.params[2]);
+            bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
+        } else {
+            // New style options are in an object
+            UniValue options = request.params[1];
+            RPCTypeCheckArgument(options, UniValue::VOBJ);
+            RPCTypeCheckObj(options,
+                {
+                    {"sign", UniValueType(UniValue::VBOOL)},
+                    {"bip32derivs", UniValueType(UniValue::VBOOL)},
+                    {"sighashtype", UniValueType(UniValue::VSTR)},
+                },
+                true, true);
+            if (options.exists("sign")) {
+                sign = options["sign"].get_bool();
+            }
+            if (options.exists("bip32derivs")) {
+                bip32derivs = options["bip32derivs"].get_bool();
+            }
+            if (options.exists("sighashtype")) {
+                sighash_type = ParseSighashString(options["sighashtype"]);
+            }
+        }
+    }
 
     // Fill transaction with our data and also sign
-    bool sign = request.params[1].isNull() ? true : request.params[1].get_bool();
-    bool bip32derivs = request.params[3].isNull() ? true : request.params[3].get_bool();
     bool complete = true;
-    const TransactionError err{wallet.FillPSBT(psbtx, complete, nHashType, sign, bip32derivs)};
+    const TransactionError err{wallet.FillPSBT(psbtx, complete, sighash_type, sign, bip32derivs)};
     if (err != TransactionError::OK) {
         throw JSONRPCTransactionError(err);
     }
